@@ -20,7 +20,7 @@ if (name=="Pedro"){
 
 # Data from INE (Total poblacion)
 
-data <- read.csv(paste0(path,"/series/raw/serie_poblacion_provincia.csv"), sep=";",
+data <- read.csv(paste0(path,"/Series/raw/serie_poblacion_provincia.csv"), sep=";",
   fileEncoding = "latin1") %>%
   dplyr::select(Provincias, Periodo, Total) %>%
   mutate(Total = as.numeric(gsub("\\.", "", Total))) 
@@ -40,7 +40,7 @@ pob <- data %>%
 
 # Data from INE (Plazas turisticas)
 
-data <- read.delim(paste0(path,"series/raw/serie_plazas_turisticas.csv"), 
+data <- read.delim(paste0(path,"Series/raw/serie_plazas_turisticas.csv"), 
 comment.char="#", fileEncoding = "latin1") %>%
   dplyr::select(Provincias, Periodo, Total) %>%
   mutate(Total = as.numeric(gsub("\\.", "", Total)))
@@ -103,7 +103,8 @@ prov <- data %>%
   distinct()
 
 decomp <- left_join(decomp, prov, by = "prov_code") %>%
-  mutate(Provincia = as.factor(prov_name))
+  mutate(Provincia = as.factor(prov_name)) %>%
+  filter(Fecha >= as.Date("2015-01-01"))
 
 # Plot
  ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
@@ -115,4 +116,5 @@ decomp <- left_join(decomp, prov, by = "prov_code") %>%
 hchart(decomp, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
                   hc_legend(enabled = FALSE) %>%
-                  htmlwidgets::saveWidget(paste0(path,"series/trend_plot.html"))
+                  hc_exporting(enabled = FALSE) %>%
+                  htmlwidgets::saveWidget(paste0(path,"Series/plots/plazas_per_capita.html"))
