@@ -1,6 +1,8 @@
 #         Author: Pedro Salas Rojo
 #         Date: 11/2024
 #         Name of project: Plazas turísticas per capita
+#         Data: Webscrapping INE, series experimentales,  Medición del número de viviendas turísticas en España y su capacidad
+#         Serie origen: Viviendas turísticas, plazas y plazas por vivienda turística. Total nacional, comunidades autónomas y provincias
 
 rm(list = ls(all.names = TRUE)) 
 library(tidyverse)
@@ -48,11 +50,10 @@ names(data) <- c("total", "ccaa", "prov", "type", "date", "value")
 data$date <- ymd(paste0(substr(data$date, 1, 4), "-", substr(data$date, 6, 7), "-01"))
 
 data <- data %>% 
-   filter(type == "Plazas") %>%
    mutate(prov_code = sub(" .*", "", ifelse(is.na(prov), "", prov)),
    prov_name = sub("^[0-9]+ ", "", ifelse(is.na(prov), "", prov))) %>%
   filter(prov_code != "") %>%
-   dplyr::select(-total, -ccaa, -type, - prov, -prov_code) 
+   dplyr::select(-total, -ccaa, - prov, -prov_code) 
 
 # Find mismatched names. They are all Autonomous Regions
 mismatched_names <- setdiff(data$prov_name, pob$prov_name)
@@ -67,7 +68,7 @@ data <- left_join(data, pob, by = c("prov_name", "date")) %>%
 data$prov_name <- sub("^(.*) \\((.*)\\)$", "\\2 \\1", data$prov_name)
 
 # Get ratio plazas / poblacion total
-data$value = data$value / data$pobtot
+data$value = data$value / (data$pobtot/1000)
 
 # Rename
 data <- data %>%
@@ -83,10 +84,26 @@ data <- data %>%
 #                 theme_minimal() +
 #                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
 
-hchart(data, "line", 
+# Plazas
+dataplot <- data %>%
+  filter(type == "Plazas")
+
+hchart(dataplot, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
-#                  hc_legend(enabled = FALSE) %>%
+                  hc_legend(enabled = FALSE) %>%
                   hc_exporting(enabled = FALSE) %>%
                   hc_xAxis(title = list(text = "Mes - Año")) %>%
-                  hc_yAxis(title = list(text = "Plazas por Habitante")) %>%
-                  htmlwidgets::saveWidget(paste0(path,"Series/plots/plazas_habitante.html"))
+                  hc_yAxis(title = list(text = "Plazas turísticas por 1000 habitantes")) %>%
+                  htmlwidgets::saveWidget(paste0(path,"Series/plots/plazas_turisticas_x1000habitantes.html"))
+
+dataplot <- data %>%
+  filter(type == "Viviendas turísticas")
+
+hchart(dataplot, "line", 
+                  hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
+                  hc_legend(enabled = TRUE) %>%
+                  hc_exporting(enabled = FALSE) %>%
+                  hc_xAxis(title = list(text = "Mes - Año")) %>%
+                  hc_yAxis(title = list(text = "Viviendas turísticas por 1000 habitantes")) %>%
+                  htmlwidgets::saveWidget(paste0(path,"Series/plots/viviendas_turisticas_x1000habitantes.html"))
+

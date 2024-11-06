@@ -1,6 +1,8 @@
 #         Author: Pedro Salas Rojo
 #         Date: 11/2024
 #         Name of project: Nuevas Calificaciones de Vivienda Protegida
+#         Data: Nuevas Calificacones de vivienda protegida, Ministerio de Transportes y Movilidad Sostenible (2024)
+#         Serie origen: 1.6. Número de calificaciones definitivas. Planes estatales y planes autonómicos
 
 rm(list = ls(all.names = TRUE)) 
 library(tidyverse)
@@ -108,8 +110,8 @@ data <- data %>%
 
 hchart(data, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
-#                  hc_legend(enabled = FALSE) %>%
+                  hc_legend(enabled = TRUE) %>%
                   hc_exporting(enabled = FALSE) %>%
                   hc_xAxis(title = list(text = "Año")) %>%
                   hc_yAxis(title = list(text = "Nuevas Calificaciones de vivienda protegida por 1000 habitantes")) %>%
-                  htmlwidgets::saveWidget(paste0(path,"Series/plots/calificaciones_habitantes.html"))
+                  htmlwidgets::saveWidget(paste0(path,"Series/plots/nuevas_calificaciones_x1000habitantes.html"))

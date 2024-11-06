@@ -1,6 +1,8 @@
 #         Author: Pedro Salas Rojo
-#         Date: 11/2023
+#         Date: 11/2024
 #         Name of project: Series Apartamentos Turísticos
+#         Data: Encuesta de Ocupación en Apartamentos Turísticos (INE)
+#         Serie origen: Encuesta de ocupación en apartamentos turísticos. Nacional, ccaa, provincias, zonas y puntos turísticos
 
 rm(list = ls(all.names = TRUE)) 
 library(tidyverse)
@@ -40,7 +42,7 @@ pob <- data %>%
 
 # Data from INE (Plazas turisticas)
 
-data <- read.delim(paste0(path,"Series/raw/serie_plazas_turisticas.csv"), 
+data <- read.delim(paste0(path,"Series/raw/serie_apartamentos_turisticos.csv"), 
 comment.char="#", fileEncoding = "latin1") %>%
   dplyr::select(Provincias, Periodo, Total) %>%
   mutate(Total = as.numeric(gsub("\\.", "", Total)))
@@ -63,7 +65,7 @@ data <- data %>%
 data <- left_join(data, pob, by = c("prov_code", "prov_name", "date")) 
 
 # Get ratio plazas / poblacion total
-data$Total = data$Total / data$pobtot
+data$Total = data$Total / (data$pobtot/1000)
 
 # Get total and time series
 tsdata <- data %>%
@@ -108,14 +110,16 @@ decomp <- left_join(decomp, prov, by = "prov_code") %>%
   filter(Fecha >= as.Date("2015-01-01"))
 
 # Plot with ggplotly and hchart ----
- ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
-                 geom_line() +
-                 labs(title = "Trend by Date", x = "Date", y = "Trend") +
-                 theme_minimal() +
-                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
+# ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
+#                 geom_line() +
+#                 labs(title = "Trend by Date", x = "Date", y = "Trend") +
+#                 theme_minimal() +
+#                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
 
 hchart(decomp, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
-                  hc_legend(enabled = FALSE) %>%
+                  hc_legend(enabled = TRUE) %>%
+                  hc_xAxis(title = list(text = "Mes - Año")) %>%
+                  hc_yAxis(title = list(text = "Apartamentos turísticos por 1000 Habitantes")) %>%
                   hc_exporting(enabled = FALSE) %>%
-                  htmlwidgets::saveWidget(paste0(path,"Series/plots/plazas_per_capita.html"))
+                  htmlwidgets::saveWidget(paste0(path,"Series/plots/apartamentos_turisticos_x1000habitantes_EOAT.html"))

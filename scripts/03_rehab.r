@@ -1,6 +1,8 @@
 #         Author: Pedro Salas Rojo
 #         Date: 11/2024
 #         Name of project: Nuevas Calificaciones de Vivienda Protegida
+#         Data: Rehabilitación vivienda protegida, Ministerio de Transportes y Movilidad Sostenible (2024)
+#         Serie origen: 2.6. Número de aprobaciones definitivas. Planes estatales y planes autonómicos
 
 rm(list = ls(all.names = TRUE)) 
 library(tidyverse)
@@ -107,8 +109,8 @@ data <- data %>%
 
 hchart(data, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
-#                  hc_legend(enabled = FALSE) %>%
+                  hc_legend(enabled = TRUE) %>%
                   hc_exporting(enabled = FALSE) %>%
                   hc_xAxis(title = list(text = "Año")) %>%
                   hc_yAxis(title = list(text = "Rehabilitacion del parque residencial protegido, por 1000 habitantes")) %>%
-                  htmlwidgets::saveWidget(paste0(path,"Series/plots/rehabilitacion_habitantes.html"))
+                  htmlwidgets::saveWidget(paste0(path,"Series/plots/rehabilitaciones_x1000habitantes.html"))
