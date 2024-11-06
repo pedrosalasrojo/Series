@@ -65,7 +65,7 @@ data <- left_join(data, pob, by = c("prov_code", "prov_name", "date"))
 # Get ratio plazas / poblacion total
 data$Total = data$Total / data$pobtot
 
-# Get only total and time series
+# Get total and time series
 tsdata <- data %>%
     dplyr::select(prov_code, Total, date) %>%
     spread(key = prov_code, value = Total) %>%
@@ -93,6 +93,7 @@ for (var in names(tsdata)[2:ncol(tsdata)]) {
 }
 
 decomp <- as.data.frame(decomp)
+
 decomp <- decomp %>%
   mutate(across(-c(date, prov_code), as.numeric),
          Fecha = as.Date(date),
@@ -106,7 +107,7 @@ decomp <- left_join(decomp, prov, by = "prov_code") %>%
   mutate(Provincia = as.factor(prov_name)) %>%
   filter(Fecha >= as.Date("2015-01-01"))
 
-# Plot
+# Plot with ggplotly and hchart ----
  ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
                  geom_line() +
                  labs(title = "Trend by Date", x = "Date", y = "Trend") +
