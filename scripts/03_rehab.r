@@ -1,5 +1,5 @@
 #         Author: Pedro Salas Rojo
-#         Date: 11/2023
+#         Date: 11/2024
 #         Name of project: Nuevas Calificaciones de Vivienda Protegida
 
 rm(list = ls(all.names = TRUE)) 
@@ -10,6 +10,7 @@ library(xts)
 library(lubridate)
 library(highcharter) 
 options(highcharter.theme = hc_theme_smpl(tooltip = list(valueDecimals = 2)))
+
 name="Pedro"
 
 if (name=="Pedro"){
