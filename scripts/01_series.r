@@ -107,7 +107,10 @@ prov <- data %>%
 
 decomp <- left_join(decomp, prov, by = "prov_code") %>%
   mutate(Provincia = as.factor(prov_name)) %>%
-  filter(Fecha >= as.Date("2015-01-01"))
+  filter(Fecha >= as.Date("2015-01-01")) %>%
+  filter(Fecha <= as.Date("2022-12-31"))
+
+decomp$Provincia <- sub("([^,]+),\\s*(.*)", "\\2 \\1", decomp$Provincia)
 
 # Plot with ggplotly and hchart ----
 # ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
@@ -115,11 +118,12 @@ decomp <- left_join(decomp, prov, by = "prov_code") %>%
 #                 labs(title = "Trend by Date", x = "Date", y = "Trend") +
 #                 theme_minimal() +
 #                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
-
 hchart(decomp, "line", 
-                  hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
-                  hc_legend(enabled = TRUE) %>%
-                  hc_xAxis(title = list(text = "Mes - Año")) %>%
-                  hc_yAxis(title = list(text = "Apartamentos turísticos por 1000 Habitantes")) %>%
-                  hc_exporting(enabled = FALSE) %>%
-                  htmlwidgets::saveWidget(paste0(path,"Series/plots/apartamentos_turisticos_x1000habitantes_EOAT.html"))
+  hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
+  hc_legend(enabled = TRUE) %>%
+  hc_xAxis(title = list(text = "Mes - Año")) %>%
+  hc_yAxis(title = list(text = "Apartamentos turísticos por 1000 Habitantes (EOAT)")) %>%
+  hc_exporting(enabled = FALSE) %>%
+  hc_title(text = "Apartamentos turísticos por 1000 Habitantes") %>%
+  hc_subtitle(text = "Pedro Salas-Rojo | Datos: Encuesta de Ocupación en Apartamentos Turísticos (INE)") %>%
+  htmlwidgets::saveWidget(paste0(path,"Series/plots/apartamentos_turisticos_x1000habitantes_EOAT.html"))
