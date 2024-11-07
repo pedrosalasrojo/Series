@@ -1,6 +1,6 @@
 #         Author: Pedro Salas Rojo
 #         Date: 11/2024
-#         Name of project: Series Apartamentos Turísticos
+#         Name of project: Series de Apartamentos Turísticos
 #         Data: Encuesta de Ocupación en Apartamentos Turísticos (INE)
 #         Serie origen: Encuesta de ocupación en apartamentos turísticos. Nacional, ccaa, provincias, zonas y puntos turísticos
 
@@ -20,16 +20,13 @@ if (name=="Pedro"){
   path <- paste0("-")
 }
 
-# Data from INE (Total poblacion)
+# Get Data from INE (Total poblacion)
 
-data <- read.csv(paste0(path,"/Series/raw/serie_poblacion_provincia.csv"), sep=";",
-  fileEncoding = "latin1") %>%
+pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"), 
+  sep=";", fileEncoding = "latin1") %>%
   dplyr::select(Provincias, Periodo, Total) %>%
-  mutate(Total = as.numeric(gsub("\\.", "", Total))) 
-
-data$Periodo <- dmy(data$Periodo)
-
-pob <- data %>%
+  mutate(Total = as.numeric(gsub("\\.", "", Total)),
+         Periodo = dmy(Periodo)) %>%
   group_by(Provincias) %>%
   complete(Periodo = seq.Date(min(Periodo), max(Periodo), by = "month")) %>%
   fill(Total, .direction = "downup") %>%
@@ -42,8 +39,8 @@ pob <- data %>%
 
 # Data from INE (Plazas turisticas)
 
-data <- read.delim(paste0(path,"Series/raw/serie_apartamentos_turisticos.csv"), 
-comment.char="#", fileEncoding = "latin1") %>%
+data <- read.delim(paste0(path,"Series/raw/viv_turisticas/eoat_serie_apartamentos_turisticos.csv"), 
+  comment.char="#", fileEncoding = "latin1") %>%
   dplyr::select(Provincias, Periodo, Total) %>%
   mutate(Total = as.numeric(gsub("\\.", "", Total)))
 
@@ -52,10 +49,10 @@ comment.char="#", fileEncoding = "latin1") %>%
 
 data <- data %>%
   mutate(prov_code = sub(" .*", "", ifelse(is.na(Provincias), "", Provincias)),
-     prov_name = sub("^[0-9]+ ", "", ifelse(is.na(Provincias), "", Provincias)),
-     Year = as.numeric(sub("M.*", "", Periodo)),
-     Month = as.numeric(sub(".*M", "", Periodo)),
-     Total = as.numeric(Total)) %>%
+         prov_name = sub("^[0-9]+ ", "", ifelse(is.na(Provincias), "", Provincias)),
+         Year = as.numeric(sub("M.*", "", Periodo)),
+         Month = as.numeric(sub(".*M", "", Periodo)),
+         Total = as.numeric(Total)) %>%
   mutate(date = as.Date(paste(Year, Month, "01", sep = "-"))) %>%
   group_by(prov_code) %>%
   mutate(Total = zoo::na.approx(Total, na.rm = FALSE)) %>%
@@ -73,10 +70,9 @@ tsdata <- data %>%
     spread(key = prov_code, value = Total) %>%
     arrange(date)
 
-decomp <- data.frame(x = numeric(), seasonal = numeric(),
-           trend = numeric(), random = numeric(),
-           date = as.Date(character()),
-           prov_code = character())
+decomp <- matrix(ncol = 6, nrow = 0, 
+                 dimnames = list(NULL, c("x", "seasonal", "trend", 
+                                         "random", "date", "prov_code")))
 
 for (var in names(tsdata)[2:ncol(tsdata)]) {
   data_ts <- tsdata %>%
@@ -91,26 +87,25 @@ for (var in names(tsdata)[2:ncol(tsdata)]) {
          by = "month", length.out = nrow(df))
   df$prov_code <- var
   names(df) <- names(decomp)
-  decomp <- rbind(as.matrix(df), as.matrix(decomp))
+  decomp <- rbind(as.matrix(df), decomp)
 }
 
 decomp <- as.data.frame(decomp)
+decomp$date <- as.Date(decomp$date)
 
-decomp <- decomp %>%
-  mutate(across(-c(date, prov_code), as.numeric),
-         Fecha = as.Date(date),
-         Valor = round(trend, 5)) 
+data <- left_join(data, decomp, by = c("date", "prov_code"))
 
-prov <- data %>%
-  dplyr::select(prov_code, prov_name) %>%
-  distinct()
-
-decomp <- left_join(decomp, prov, by = "prov_code") %>%
+# Update values
+data <- data %>%
   mutate(Provincia = as.factor(prov_name)) %>%
-  filter(Fecha >= as.Date("2015-01-01")) %>%
-  filter(Fecha <= as.Date("2022-12-31"))
+  filter(date >= as.Date("2015-01-01") & date <= as.Date("2022-12-31")) %>%
+  mutate(Provincia = sub("([^,]+),\\s*(.*)", "\\2 \\1", Provincia)) %>%
+  rename(Fecha = date, Valor = trend) %>%
+  mutate(across(c(Total, prov_code, Year, Month, pobtot, 
+                  x, seasonal, Valor, random), as.numeric))
 
-decomp$Provincia <- sub("([^,]+),\\s*(.*)", "\\2 \\1", decomp$Provincia)
+# Fix Ávila (otherwise it appears after Zaragoza)
+data$Provincia <- gsub("^[Áá]", "A", data$Provincia)
 
 # Plot with ggplotly and hchart ----
 # ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
@@ -118,7 +113,8 @@ decomp$Provincia <- sub("([^,]+),\\s*(.*)", "\\2 \\1", decomp$Provincia)
 #                 labs(title = "Trend by Date", x = "Date", y = "Trend") +
 #                 theme_minimal() +
 #                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
-hchart(decomp, "line", 
+
+hchart(data, "line", 
   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
   hc_legend(enabled = TRUE) %>%
   hc_xAxis(title = list(text = "Mes - Año")) %>%
