@@ -131,6 +131,8 @@ hchart(data, "line",
                   hc_exporting(enabled = FALSE) %>%
                   hc_xAxis(title = list(text = "Año")) %>%
                   hc_yAxis(title = list(text = "Nuevas Calificaciones de vivienda protegida por 1000 habitantes")) %>%
+                  hc_title(text = "Flujo de nuevas calificaciones de vivienda protegida por 1000 Habitantes") %>%
+                  hc_subtitle(text = "Pedro Salas-Rojo | Datos: Ministerio de Transportes y Movilidad Sostenible") %>%
                   htmlwidgets::saveWidget(paste0(path,"Series/plots/flujo_nuevas_calificaciones_x1000habitantes.html"))
 
 # Stock
