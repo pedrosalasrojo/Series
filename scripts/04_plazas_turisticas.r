@@ -6,8 +6,10 @@
 
 rm(list = ls(all.names = TRUE)) 
 library(tidyverse)
+library(mapSpain)
 library(readxl)
 library(plotly)
+library(htmlwidgets)
 library(xts)
 library(lubridate)
 library(highcharter) 
@@ -21,9 +23,7 @@ if (name=="Pedro"){
   path <- paste0("-")
 }
 
-# Data from INE (Total poblacion)
-
-# Data from INE (Total poblacion)
+# Data from INE (Total poblacion)  Provincias -----
 
 pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"), 
   sep=";", fileEncoding = "latin1") %>%
@@ -50,7 +50,7 @@ pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"),
     "Asturias (Principado de )" = "Asturias",
     "Palmas (Las)" = "Palmas, Las"))
     
-# Data from INE (Plazas turisticas)
+# Data from INE (Plazas turisticas), Provincias and CCAA ----
 
 data <- read.csv2(paste0(path,"/Series/raw/viv_turisticas/viviendas_turisticas_ccaa_prov_total.csv"), 
   sep=";",  fileEncoding = "UTF-8") 
@@ -88,7 +88,7 @@ data <- data %>%
 # Fix Ávila (otherwise it appears after Zaragoza)
 data$Provincia <- gsub("^[Áá]", "A", data$Provincia)
 
-# Plot with ggplotly and hchart ----
+# Plot with ggplotly and hchart 
 # ggplotly(ggplot(data, aes(x = Fecha, y = Valor, color = Provincia)) +
 #                 geom_line() +
 #                 labs(title = "Flujo Rehabilitaciones", x = "Año",
@@ -102,7 +102,7 @@ dataplot <- data %>%
 
 hchart(dataplot, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
-                  hc_legend(enabled = FALSE) %>%
+                  hc_legend(enabled = TRUE) %>%
                   hc_exporting(enabled = FALSE) %>%
                   hc_xAxis(title = list(text = "Mes - Año")) %>%
                   hc_yAxis(title = list(text = "Plazas turísticas por 1000 habitantes")) %>%
@@ -123,3 +123,63 @@ hchart(dataplot, "line",
                   hc_subtitle(text = "Pedro Salas-Rojo | Datos: Instituto Nacional de Estadística") %>%
                   htmlwidgets::saveWidget(paste0(path,"Series/plots/viviendas_turisticas_x1000habitantes.html"))
 
+# Data from INE (Total poblacion) Municipalties -----
+
+pob <- read_xlsx(paste0(path,"/Series/raw/other/pobmun/pobmun23.xlsx")) 
+names(pob) <- c("cpro", "province", "cmun", "prov_name", "pobtot", "male", "female")
+pob <- pob[-1,]
+pob <- pob %>%
+  dplyr::select(cpro, cmun, pobtot)
+
+# Data from INE (Plazas turisticas), Municipalties ----
+munic <- esp_get_munic()
+
+data <- read.csv2(paste0(path,"/Series/raw/viv_turisticas/viviendas_turisticas_municipios_total.csv"), 
+  sep=";",  fileEncoding = "UTF-8") 
+names(data) <- c("total", "ccaa", "prov", "cmun", "type", "date", "value")
+data$cpro <- substr(data$cmun, 1, 2)
+data$muniname <- sub("^\\d{5} ", "", data$cmun)
+data$prov_name <- sub("^(.*) \\((.*)\\)$", "\\2 \\1", sub("^\\d{5} ", "", data$prov))
+data$cmun <- substr(data$cmun, 3, 5)
+data$date <- ymd(paste0(substr(data$date, 1, 4), "-", substr(data$date, 6, 7), "-01"))
+
+# Merge both datasets 
+data <- left_join(data, pob, by = c("cpro", "cmun")) %>%
+        na.omit() %>%
+  mutate(value = as.numeric(gsub("\\.", "", value)))
+
+data <- left_join(data, munic, by = c("cpro", "cmun")) 
+
+# Get ratio plazas / poblacion total
+data$value = data$value / (as.numeric(data$pobtot)/1000)
+
+# Rename
+data <- data %>%
+  dplyr::rename(Provincia = prov_name,
+                Fecha = date,
+                Valor = value)
+
+dataplot <- data %>%
+  filter(type == "Plazas")     %>%
+  filter(Fecha == "2024M08") %>%
+  na.omit() 
+
+p <-  ggplot(dataplot, aes(geometry = geometry)) +
+    geom_sf(aes(fill = Valor), color = NA, linewidth = 0) +
+    geom_sf(data = data, fill = NA, color = "black") +
+    scale_fill_gradient(low = "darkgreen", 
+                        high = "tomato",
+                        na.value = "grey97",  # Set fill for NA values to white
+                        name = "Share of Housing Rents (%)",  # Customize the legend title
+                        labels = scales::comma) +
+    labs(title = "Housing Rents by Municipalities with more than 5000 inhabitants (2021)") + 
+    theme_void() +
+    theme(plot.title = element_text(hjust = 0.5, color = "black"),  # Center and color the title
+          text = element_text(color = "black"),
+          legend.position = "bottom",
+          legend.title = element_text(hjust = 0.5),  # Center the legend title
+          legend.title.position = "top",
+          legend.text = element_text(size = 8),  # Adjust legend text size
+          legend.key.width = unit(30, "pt"))
+
+saveWidget(ggplotly(p), file = paste0(path,"Series/plots/plazas_turisticas_munic_x1000habitantes.html"));
