@@ -4,6 +4,8 @@
 #         Data: Webscrapping INE, series experimentales,  Medición del número de viviendas turísticas en España y su capacidad
 #         Serie origen: Viviendas turísticas, plazas y plazas por vivienda turística. Total nacional, comunidades autónomas y provincias
 
+# Files can be updated to viviendas, plazas, and so on. Simply change the file name
+
 rm(list = ls(all.names = TRUE)) 
 library(tidyverse)
 library(mapSpain)
