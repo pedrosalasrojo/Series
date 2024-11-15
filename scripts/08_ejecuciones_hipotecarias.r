@@ -16,20 +16,21 @@ if (name=="Pedro"){
   path <- paste0("-")
 }
 
+
 # Get all files in folder
 files <- list.files(paste0(path,"Series/raw/eh"), full.names = TRUE)
 files <- files[grepl("ccaa", files)]
 
 # Open all files
-data1 <- read.csv(files[1], sep = ";", encoding = "latin1") %>%
+data1 <- read.csv(paste0(path,"Series/raw/eh/eh_ccaa_estado_vivienda.csv"), sep = ";", encoding = "latin1") %>%
             dplyr::select(-c(1))
 names(data1) <- c("ccaa", "estado", "periodo", "total_estado")
 
-data2 <- read.csv(files[2], sep = ";", encoding = "latin1") %>%
+data2 <- read.csv(paste0(path,"Series/raw/eh/eh_ccaa_naturaleza.csv"), sep = ";", encoding = "latin1") %>%
             dplyr::select(-c(1))
 names(data2) <- c("ccaa", "naturaleza", "periodo", "total_natur")
 
-data3 <- read.csv(files[3], sep = ";", encoding = "latin1") %>%
+data3 <- read.csv(paste0(path,"Series/raw/eh/eh_ccaa_titular.csv"), sep = ";", encoding = "latin1") %>%
             dplyr::select(-c(1))
 names(data3) <- c("ccaa", "titular", "periodo", "total_titular")
 
