@@ -1,22 +1,41 @@
-# Housing data in Spain
+# 🏠 Housing Data in Spain
 
-Github Repo including complete series for *most* housing data publicly available in Spain.
+Welcome to the **Housing Data in Spain** Github repo. Here I compile comprehensive series of publicly available housing-related data in Spain. The repo includes everything from housing stocks, housing prices, touristic housings trends, to construction, rehabilitation and demographics.  
 
-## What you will find here
-Provide cleaning R-scripts for a comprehensive series of Spanish housing data, including prices indexes, 
-rent, touristic apartments, construction, rehabilitation and demographics. 
+---
 
-Data stratification ranges from provinces and autonomous regions to municipalities and even small census units. 
+## 🌟 What's Inside?
 
-Original data series are provided (see raw data). The folder includes a pdf (when available) explaining the data collection
-and other particularities of the data, and then the raw series in .csv or .XLS, as provided by the admin unit.
+This repository contains:
 
-Scripts in R clean the raw data and make it ready to be used. This includes generating time variables, province
-and municipality coding, and other data arrangements so it can be easily merged with other data sources.
+### 📊 Cleaned and Processed Data
+- **scripts** folder: Scripts for cleaning and processing raw housing data, making it analysis-ready.
+  - Generates standardized time variables.
+  - Harmonizes provincial, municipal and census codes for easy merging with other datasets.
+  - Organizes and formats data for seamless integration.
 
-Plots provide some .html files deploying some time series. Feel free to modify and update the series at will.
+### 📁 Raw Data
+- Original datasets in `.csv` or `.xls` formats, as provided by Spanish administrative units.
+- Supporting documentation (PDFs) explaining data collection methodologies and other details (when available).  
 
-Sources: Instituto Nacional de Estadística (original and experimental time series) and diverse Ministries.
+### 🗺️ Geographic Coverage
+- Data stratified at multiple geographic levels:
+  - **National**: Spain-wide aggregates.
+  - **Regional**: Autonomous communities and provinces.
+  - **Local**: Municipalities and even small census units.
 
-Contact: p.salas-rojo@lse.ac.uk
+### 📈 Visualizations
+- Interactive **HTML plots** for time-series data.
+
+---
+
+## 🛠️ Sources
+- Instituto Nacional de Estadística (INE), including original and experimental time series.
+- Data contributions from various Spanish Ministries.
+
+---
+
+## 📬 Contact
+For questions or collaboration, please contact:  
+📧 **[p.salas-rojo@lse.ac.uk](mailto:p.salas-rojo@lse.ac.uk)**
 
