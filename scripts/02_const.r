@@ -12,15 +12,17 @@ library(xts)
 library(lubridate)
 library(highcharter) 
 options(highcharter.theme = hc_theme_smpl(tooltip = list(valueDecimals = 2)))
+
 name="Pedro"
 
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("-")
+  path <- paste0("Plug_your_path")
 }
 
-# Data from INE (Total poblacion)
+# Data from INE (Total poblacion). Get Total population and manipulate the data
+# Such that it can be easily merged with the construction series
 
 pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"), 
   sep=";", fileEncoding = "latin1") %>%
@@ -60,7 +62,7 @@ pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"),
     prov_name == "TOTAL" ~ "TOTAL NACIONAL",
     TRUE ~ prov_name))
 
-# Data from INE (Plazas turisticas)
+# Data from Ministerio (Construccion nueva vivienda)
 data <- read_excel(paste0(path,"Series/raw/flujos_calif_rehab/calif_estat_auton.xls")) 
 data <- data[-c(1:4), ]
 row1 <- gsub(" por meses", "", data[1, ])
@@ -83,26 +85,29 @@ data <- data %>%
     
 data <- data[str_count(data$prov_name, '\\S+') <= 10, ]
 
-months_spa <- c("Ene.", "Feb.", "Mar.", "Abr.", "May.", "Jun.", "Jul.", "Ago.", "Sep.", "Oct.", "Nov.", "Dic.")
-months_eng <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+months_spa <- c("Ene.", "Feb.", "Mar.", "Abr.", "May.", "Jun.",
+                "Jul.", "Ago.", "Sep.", "Oct.", "Nov.", "Dic.")
+months_eng <- c("Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+                "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
 for (i in 1:length(months_spa)) {
   data$date <- gsub(months_spa[i], months_eng[i], data$date)
 }
+
 data$year <- as.numeric(substring(data$date, 1, 4))    
 data$month <- substring(data$date, 5, 7)  
-data$date <- mdy(paste(data$month, "01", data$year))
+data$date <- dmy(paste("01", data$month, data$year))
 
 # Find mismatched names. They are all Autonomous Regions
 mismatched_names <- setdiff(data$prov_name, pob$prov_name)
 print(mismatched_names)
 
 # Merge both datasets 
-data <- left_join(data, pob, by = c("prov_name", "date")) %>%
-        na.omit() %>%
-        filter(prov_name != "Ceuta" & prov_name != "Melilla")
+data <- left_join(data, pob, by = c("prov_name", "date")) %>% na.omit()
 
+# Fix names
 data$prov_name <- sub("^(.*) \\((.*)\\)$", "\\2 \\1", data$prov_name)
 data$prov_name[data$prov_name == "Comunidad Foral de Navarra"] <- "Comunidad F. de Navarra"
+data$prov_name <- gsub("^[Áá]", "A", data$prov_name)
 
 # Get ratio new houses / poblacion total (in thousands)
 data$Total_reference <- data$Total
@@ -114,17 +119,7 @@ data <- data %>%
                 Fecha = date,
                 Valor = Total)
 
-# Fix Ávila (otherwise it appears after Zaragoza)
-data$Provincia <- gsub("^[Áá]", "A", data$Provincia)
-
-# Plot with ggplotly and hchart ----
-# ggplotly(ggplot(data, aes(x = Fecha, y = Valor, color = Provincia)) +
-#                 geom_line() +
-#                 labs(title = "Flujo Nuevas Calificaciones", x = "Año",
-#                  y = "Calificaciones por 1000 habitantes") +
-#                 theme_minimal() +
-#                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
-
+# Plot with hchart 
 hchart(data, "line", 
                   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
                   hc_legend(enabled = TRUE) %>%
@@ -135,8 +130,7 @@ hchart(data, "line",
                   hc_subtitle(text = "Pedro Salas-Rojo | Datos: Ministerio de Transportes y Movilidad Sostenible") %>%
                   htmlwidgets::saveWidget(paste0(path,"Series/plots/flujo_nuevas_calificaciones_x1000habitantes.html"))
 
-# Stock
-
+# Plot the Stock with hchart
 data<-data %>%
   group_by(Provincia) %>%
   mutate(Stock = cumsum(Total_reference)/(pobtot/1000)) %>%

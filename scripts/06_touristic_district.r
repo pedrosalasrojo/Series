@@ -13,7 +13,7 @@ name="Pedro"
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("-")
+  path <- paste0("Plug_your_path")
 }
 
 # Get all files in folder
@@ -42,9 +42,10 @@ data <- data %>%
     rename(vivienda = 'vivienda turistica',
            share = 'porcentaje vivienda turistica')
 
-# Plazas out 
+data$date <- dmy(paste("01", data$month, data$year))
+data$viv_tot <- data$vivienda*100/data$share         # Get "total viviendas". Not sure this is relaible
+
+# Plazas out, few missing and likely outliers. 
 whatmiss <- na.omit(data$plazas[is.na(data$share)])
 plot(density(whatmiss))
 
-# Clean data
-data <- na.omit(data)

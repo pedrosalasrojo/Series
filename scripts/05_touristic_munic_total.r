@@ -22,10 +22,11 @@ name="Pedro"
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("-")
+  path <- paste0("Plug_your_path")
 }
 
-# Data from INE (Total poblacion)  Provincias -----
+# Get Data from INE (Total poblacion) Get Total population and manipulate the data
+# Such that it can be easily merged with the Touristic series
 
 pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"), 
   sep=";", fileEncoding = "latin1") %>%
@@ -70,7 +71,7 @@ data <- data %>%
 mismatched_names <- setdiff(data$prov_name, pob$prov_name)
 print(mismatched_names)
 
-    # Merge both datasets 
+# Merge both datasets 
 data <- left_join(data, pob, by = c("prov_name", "date")) %>%
         na.omit() %>%
         filter(prov_name != "Ceuta" & prov_name != "Melilla")  %>%
@@ -90,13 +91,7 @@ data <- data %>%
 # Fix Ávila (otherwise it appears after Zaragoza)
 data$Provincia <- gsub("^[Áá]", "A", data$Provincia)
 
-# Plot with ggplotly and hchart 
-# ggplotly(ggplot(data, aes(x = Fecha, y = Valor, color = Provincia)) +
-#                 geom_line() +
-#                 labs(title = "Flujo Rehabilitaciones", x = "Año",
-#                  y = "Calificaciones por 1000 habitantes") +
-#                 theme_minimal() +
-#                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
+# Plot with hchart 
 
 # Plazas
 dataplot <- data %>%
@@ -125,7 +120,8 @@ hchart(dataplot, "line",
                   hc_subtitle(text = "Pedro Salas-Rojo | Datos: Instituto Nacional de Estadística") %>%
                   htmlwidgets::saveWidget(paste0(path,"Series/plots/viviendas_turisticas_x1000habitantes.html"))
 
-# Data from INE (Total poblacion) Municipalties -----
+# Repeat the exercise, now focusing on municipalities.
+# First, take the data from INE (Total poblacion) -----
 
 pob <- read_xlsx(paste0(path,"/Series/raw/other/pobmun/pobmun23.xlsx")) 
 names(pob) <- c("cpro", "province", "cmun", "prov_name", "pobtot", "male", "female")
@@ -163,8 +159,10 @@ data <- data %>%
 
 dataplot <- data %>%
   filter(type == "Plazas")     %>%
-  filter(Fecha == "2024M08") %>%
+  filter(Fecha == max(Fecha)) %>%
   na.omit() 
+
+# Plot a map with municipalties
 
 p <-  ggplot(dataplot, aes(geometry = geometry)) +
     geom_sf(aes(fill = Valor), color = NA, linewidth = 0) +

@@ -8,12 +8,12 @@ rm(list = ls(all.names = TRUE))
 library(tidyverse)
 library(readxl)
 
-name="Pedro2"
+name="Pedro"
 
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("H:/")
+  path <- paste0("Plug_your_path")
 }
 
 # Open file for "total"
@@ -49,4 +49,3 @@ data <- data %>%
         mutate(year = substr(yeartype, 1, 4),
                type = substr(yeartype, 6, nchar(yeartype))) %>%
         dplyr::select(-yeartype) 
-

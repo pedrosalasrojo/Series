@@ -13,7 +13,7 @@ name="Pedro"
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("H:/")
+  path <- paste0("Plug_your_path")
 }
 
 # Get all files in folder

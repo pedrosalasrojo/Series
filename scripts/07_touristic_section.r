@@ -13,7 +13,7 @@ name="Pedro"
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("-")
+  path <- paste0("Plug_your_path")
 }
 
 # Get all files in folder
@@ -32,9 +32,9 @@ for(i in files){
 }
 
 # Preliminar Clean and Select variables
-data <- data %>%
+data <- data %>% 
   dplyr::select(codigosec, "vivienda turistica", "plazas", "porcentaje vivienda turistica",
-                periodo, prov, mun) %>%
+                periodo, prov, mun) %>% na.omit() %>%
     mutate(year = as.numeric(substr(periodo, 1, 4)),
            month = as.numeric(substr(periodo, 6, 7)))  %>%
     mutate(mun = (substr(mun, 3, 5))) %>%
@@ -42,9 +42,5 @@ data <- data %>%
     rename(vivienda = 'vivienda turistica',
            share = 'porcentaje vivienda turistica')
 
-# Plazas out 
-whatmiss <- na.omit(data$plazas[is.na(data$share)])
-plot(density(whatmiss))
-
-# Clean data
-data <- na.omit(data)
+data$date <- dmy(paste("01", data$month, data$year))
+data$viv_tot <- data$vivienda*100/data$share         # Get "total viviendas". Not sure this is relaible

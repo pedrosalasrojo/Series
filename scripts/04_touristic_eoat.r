@@ -12,15 +12,17 @@ library(xts)
 library(lubridate)
 library(highcharter) 
 options(highcharter.theme = hc_theme_smpl(tooltip = list(valueDecimals = 2)))
+
 name="Pedro"
 
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("-")
+  path <- paste0("Plug_your_path")
 }
 
-# Get Data from INE (Total poblacion)
+# Get Data from INE (Total poblacion) Get Total population and manipulate the data
+# Such that it can be easily merged with the EOAT series
 
 pob <- read.csv(paste0(path,"/Series/raw/other/serie_poblacion_provincia.csv"), 
   sep=";", fileEncoding = "latin1") %>%
@@ -64,7 +66,9 @@ data <- left_join(data, pob, by = c("prov_code", "prov_name", "date"))
 # Get ratio plazas / poblacion total
 data$Total = data$Total / (data$pobtot/1000)
 
-# Get total and time series
+# Get total and time series. We run a simple decomposition to substract the trend.
+# The code can easily be recycled so it can be used in any other series
+
 tsdata <- data %>%
     dplyr::select(prov_code, Total, date) %>%
     spread(key = prov_code, value = Total) %>%
@@ -95,7 +99,7 @@ decomp$date <- as.Date(decomp$date)
 
 data <- left_join(data, decomp, by = c("date", "prov_code"))
 
-# Update values
+# Update values, plot Trend
 data <- data %>%
   mutate(Provincia = as.factor(prov_name)) %>%
   filter(date >= as.Date("2015-01-01") & date <= as.Date("2022-12-31")) %>%
@@ -107,13 +111,7 @@ data <- data %>%
 # Fix Ávila (otherwise it appears after Zaragoza)
 data$Provincia <- gsub("^[Áá]", "A", data$Provincia)
 
-# Plot with ggplotly and hchart ----
-# ggplotly(ggplot(decomp, aes(x = Fecha, y = Valor, color = Provincia)) +
-#                 geom_line() +
-#                 labs(title = "Trend by Date", x = "Date", y = "Trend") +
-#                 theme_minimal() +
-#                 theme(axis.text.x = element_text(angle = 45, hjust = 1), legend.position = "none"))
-
+# Plot with hchart ----
 hchart(data, "line", 
   hcaes(x = Fecha, y = Valor, group = Provincia)) %>%
   hc_legend(enabled = TRUE) %>%

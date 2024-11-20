@@ -8,12 +8,12 @@ rm(list = ls(all.names = TRUE))
 library(tidyverse)
 library(readxl)
 
-name="Pedro2"
+name="Pedro"
 
 if (name=="Pedro"){
   path <- paste0("C:/Users/user/Documents/mispapers/Housing/data/")
 } else {
-  path <- paste0("H:/")
+  path <- paste0("Plug_your_path")
 }
 
 # Get all files in folder
@@ -47,7 +47,7 @@ data <- data %>% dplyr::select(-totnac)
 
 # Open Municipios
 
-data <- read.csv(paste0("H:/Series/raw/ipva/ipva_muni.csv"), row.names = NULL, sep = ";")
+data <- read.csv(paste0(path,"Series/raw/ipva/ipva_muni.csv"), row.names = NULL, sep = ";")
 names(data) <- c("munic", "tipo", "periodo", "value")
 
 data$cpro <- as.numeric(substr(data$munic, 1, 2))
@@ -56,7 +56,7 @@ data$munic <- sub("^\\d{5}\\s*", "", data$munic)
 
 # Open Districts
 
-data <- read.csv(paste0("H:/Series/raw/ipva/ipva_dist.csv"), row.names = NULL, sep = ";")
+data <- read.csv(paste0(path,"Series/raw/ipva/ipva_dist.csv"), row.names = NULL, sep = ";")
 names(data) <- c("totnac", "dist", "tipo", "periodo", "value")
 data$cpro <- (substr(data$dist, 1, 2))
 data$cmun <- (substr(data$dist, 3, 5))
